@@ -3,8 +3,11 @@ package com.udacity.stockhawk.data;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.util.Log;
+import android.widget.Toast;
 
 import com.udacity.stockhawk.R;
+import com.udacity.stockhawk.sync.QuoteSyncJob;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -40,11 +43,20 @@ public final class PrefUtils {
     private static void editStockPref(Context context, String symbol, Boolean add) {
         String key = context.getString(R.string.pref_stocks_key);
         Set<String> stocks = getStocks(context);
+        Log.i("STOCKS", stocks.toString());
+        if (add ) {
+            if(stocks.contains(symbol.toUpperCase())){
+                Log.i("contain","contain");
+                Toast.makeText(context, context.getString(R.string.toast_stock_is_exist), Toast.LENGTH_LONG).show();
+                return;
 
-        if (add) {
-            stocks.add(symbol);
+            }else {
+                stocks.add(symbol.toUpperCase());
+            }
+
+
         } else {
-            stocks.remove(symbol);
+            stocks.remove(symbol.toUpperCase());
         }
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -86,6 +98,20 @@ public final class PrefUtils {
         }
 
         editor.apply();
+    }
+
+    @SuppressWarnings("ResourceType")
+    static public @QuoteSyncJob.StockStatus
+    int getStockStatus(Context c){
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(c);
+        return sp.getInt(c.getString(R.string.pref_stock_status_key), QuoteSyncJob.STOCK_STATUS_UNKNOWN);
+    }
+
+    static public void resetStockStatus(Context c){
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(c);
+        SharedPreferences.Editor spe = sp.edit();
+        spe.putInt(c.getString(R.string.pref_stock_status_key), QuoteSyncJob.STOCK_STATUS_UNKNOWN);
+        spe.apply();
     }
 
 }

@@ -6,13 +6,22 @@ import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.preference.PreferenceManager;
+import android.support.annotation.IntDef;
+import android.util.Log;
+import android.widget.Toast;
 
+import com.udacity.stockhawk.R;
 import com.udacity.stockhawk.data.Contract;
 import com.udacity.stockhawk.data.PrefUtils;
+import com.udacity.stockhawk.ui.MainActivity;
 
 import java.io.IOException;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashSet;
@@ -31,16 +40,32 @@ import yahoofinance.quotes.stock.StockQuote;
 public final class QuoteSyncJob {
 
     private static final int ONE_OFF_ID = 2;
-    private static final String ACTION_DATA_UPDATED = "com.udacity.stockhawk.ACTION_DATA_UPDATED";
-    private static final int PERIOD = 300000;
+    public static final String ACTION_DATA_UPDATED = "com.udacity.stockhawk.ACTION_DATA_UPDATED";
+    public static final String DATA_UPDATE_STATUS = "data_update_status";
+    public static final String DATA_UPDATE_SUCESSFUL = "data_update_sucessful";
+    public static final String DATA_UPDATE_FAILED = "data_update_failed";
+    //private static final int PERIOD = 300000;
+    private static final int PERIOD = 30000;
     private static final int INITIAL_BACKOFF = 10000;
     private static final int PERIODIC_ID = 1;
     private static final int YEARS_OF_HISTORY = 2;
+    private static final String LOG_TAG = QuoteSyncJob.class.getSimpleName();
+
+
+    @Retention(RetentionPolicy.SOURCE)
+
+    @IntDef({STOCK_STATUS_OK, STOCK_STATUS_UNKNOWN, STOCK_STATUS_INVALID})
+
+    public @interface StockStatus {}
+
+    public static final int STOCK_STATUS_OK = 0;
+    public static final int STOCK_STATUS_UNKNOWN = 1;
+    public static final int STOCK_STATUS_INVALID = 2;
 
     private QuoteSyncJob() {
     }
 
-    static void getQuotes(Context context) {
+    static void getQuotes(final Context context) {
 
         Timber.d("Running sync job");
 
@@ -48,7 +73,9 @@ public final class QuoteSyncJob {
         Calendar to = Calendar.getInstance();
         from.add(Calendar.YEAR, -YEARS_OF_HISTORY);
 
+
         try {
+
 
             Set<String> stockPref = PrefUtils.getStocks(context);
             Set<String> stockCopy = new HashSet<>();
@@ -60,8 +87,12 @@ public final class QuoteSyncJob {
             if (stockArray.length == 0) {
                 return;
             }
+            Log.i("QUOTES","QUOTES");
 
             Map<String, Stock> quotes = YahooFinance.get(stockArray);
+            Log.i("QUOTES","" + quotes.isEmpty() + quotes.size() + quotes.values());
+
+
             Iterator<String> iterator = stockCopy.iterator();
 
             Timber.d(quotes.toString());
@@ -70,9 +101,20 @@ public final class QuoteSyncJob {
 
             while (iterator.hasNext()) {
                 String symbol = iterator.next();
+                Log.i(LOG_TAG, symbol);
 
 
                 Stock stock = quotes.get(symbol);
+                Log.i(LOG_TAG, stock + "what");
+                Log.i(LOG_TAG, "stock nmae is" + !stock.isValid());
+
+
+
+                if(!stock.isValid()){
+                   setStockStatus(context, STOCK_STATUS_INVALID);
+                    PrefUtils.removeStock(context, symbol);
+                    return;
+                }
                 StockQuote quote = stock.getQuote();
 
                 float price = quote.getPrice().floatValue();
@@ -111,10 +153,15 @@ public final class QuoteSyncJob {
                             quoteCVs.toArray(new ContentValues[quoteCVs.size()]));
 
             Intent dataUpdatedIntent = new Intent(ACTION_DATA_UPDATED);
+
             context.sendBroadcast(dataUpdatedIntent);
 
         } catch (IOException exception) {
             Timber.e(exception, "Error fetching stock quotes");
+            return;
+
+
+
         }
     }
 
@@ -144,15 +191,16 @@ public final class QuoteSyncJob {
     }
 
     public static synchronized void syncImmediately(Context context) {
-
+        Log.i("SYNC1","SYNC1");
         ConnectivityManager cm =
                 (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = cm.getActiveNetworkInfo();
         if (networkInfo != null && networkInfo.isConnectedOrConnecting()) {
             Intent nowIntent = new Intent(context, QuoteIntentService.class);
             context.startService(nowIntent);
+            Log.i("SYNC2","SYNC2");
         } else {
-
+            Log.i("SYNC3","SYNC3");
             JobInfo.Builder builder = new JobInfo.Builder(ONE_OFF_ID, new ComponentName(context, QuoteJobService.class));
 
 
@@ -166,6 +214,13 @@ public final class QuoteSyncJob {
 
 
         }
+    }
+
+    static private void setStockStatus(Context c, @StockStatus int stockStatus){
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(c);
+        SharedPreferences.Editor spe = sp.edit();
+        spe.putInt(c.getString(R.string.pref_stock_status_key), stockStatus);
+        spe.commit();
     }
 
 

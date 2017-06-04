@@ -12,6 +12,9 @@
     <string name="pref_display_mode_absolute_key">absolute</string>
     <string name="pref_display_mode_percentage_key">percentage</string>
 
+    <!-- Key name for storing stock status in SharedPreferences -->
+    <string name="pref_stock_status_key" translatable="false">stock-status</string>
+
     <string name="default_stocks_yahoo">YHOO</string>
     <string name="default_stocks_apple">AAPL</string>
     <string name="default_stocks_microsoft">MSFT</string>
@@ -28,8 +31,15 @@
 
     <string name="error_no_network">No network connectivity! Will load stock cursor when the network is available.</string>
     <string name="error_no_stocks">No stocks added! Hit the floating action button to add one.</string>
+    <string name="error_server_down">No Stock information available. The server is not returning data</string>
+
+    <string name="error_stock_invalid">The stock you inputed is invalid! Please reinput.</string>
 
     <string name="toast_stock_added_no_connectivity">Symbol %s added. Will refresh when network available.</string>
     <string name="toast_no_connectivity">Will refresh when network available.</string>
+    <string name="toast_stock_is_exist">The Stock already exists!</string>
+
+    <string name="toast_stock_update_failed_for_website">The Price not refresh, The server is not returning data!</string>
+
 
 </resources>

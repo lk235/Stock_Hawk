@@ -1,10 +1,16 @@
 package com.udacity.stockhawk.ui;
 
+import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -13,6 +19,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -30,9 +37,12 @@ import timber.log.Timber;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>,
         SwipeRefreshLayout.OnRefreshListener,
-        StockAdapter.StockAdapterOnClickHandler {
+        StockAdapter.StockAdapterOnClickHandler,
+        SharedPreferences.OnSharedPreferenceChangeListener{
+
 
     private static final int STOCK_LOADER = 0;
+    private static final String LOG_TAG = MainActivity.class.getSimpleName();
     @SuppressWarnings("WeakerAccess")
     @BindView(R.id.recycler_view)
     RecyclerView stockRecyclerView;
@@ -49,9 +59,24 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         Timber.d("Symbol clicked: %s", symbol);
     }
 
+
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        sp.unregisterOnSharedPreferenceChangeListener(this);
+        unregisterReceiver(dataUpdateReceiver);
+
+
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        sp.registerOnSharedPreferenceChangeListener(this);
+        registerReceiver(dataUpdateReceiver, new IntentFilter(QuoteSyncJob.DATA_UPDATE_STATUS));
+        Log.i(LOG_TAG, "PREF: " + sp.getInt(getString(R.string.pref_stock_status_key), QuoteSyncJob.STOCK_STATUS_UNKNOWN));
 
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
@@ -62,10 +87,13 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
         swipeRefreshLayout.setOnRefreshListener(this);
         swipeRefreshLayout.setRefreshing(true);
+
         onRefresh();
 
         QuoteSyncJob.initialize(this);
         getSupportLoaderManager().initLoader(STOCK_LOADER, null, this);
+
+
 
         new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
             @Override
@@ -94,7 +122,13 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     @Override
     public void onRefresh() {
 
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        int test = sharedPreferences.getInt(getString(R.string.pref_stock_status_key), QuoteSyncJob.STOCK_STATUS_UNKNOWN);
+        Log.i("TEST", "" + test);
         QuoteSyncJob.syncImmediately(this);
+        @QuoteSyncJob.StockStatus int stockStatus = PrefUtils.getStockStatus(this);
+        Log.i(LOG_TAG, "PREF :stockstatus " + stockStatus);
+
 
         if (!networkUp() && adapter.getItemCount() == 0) {
             swipeRefreshLayout.setRefreshing(false);
@@ -103,11 +137,19 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         } else if (!networkUp()) {
             swipeRefreshLayout.setRefreshing(false);
             Toast.makeText(this, R.string.toast_no_connectivity, Toast.LENGTH_LONG).show();
-        } else if (PrefUtils.getStocks(this).size() == 0) {
+        } else if (adapter.getItemCount() == 0){
+            swipeRefreshLayout.setRefreshing(false);
+            error.setText(getString(R.string.error_server_down));
+            error.setVisibility(View.VISIBLE);
+        }else if (PrefUtils.getStocks(this).size() == 0) {
             swipeRefreshLayout.setRefreshing(false);
             error.setText(getString(R.string.error_no_stocks));
             error.setVisibility(View.VISIBLE);
-        } else {
+        } else if(PrefUtils.getStockStatus(this) == QuoteSyncJob.STOCK_STATUS_INVALID){
+
+            Toast.makeText(this, getString(R.string.error_stock_invalid),Toast.LENGTH_LONG).show();
+
+        }else {
             error.setVisibility(View.GONE);
         }
     }
@@ -186,4 +228,32 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         }
         return super.onOptionsItemSelected(item);
     }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        Log.i(LOG_TAG,"PREF: changed");
+        if ( key.equals(getString(R.string.pref_stock_status_key)) ) {
+            Log.i(LOG_TAG,"PREF ::changed");
+            onRefresh();
+            PrefUtils.resetStockStatus(this);
+        }
+    }
+
+    private BroadcastReceiver dataUpdateReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String dataUpdateStatus = intent.getDataString();
+            Log.i("STATUS_INTENT", dataUpdateStatus);
+            if(dataUpdateStatus.equals(QuoteSyncJob.DATA_UPDATE_SUCESSFUL)){
+                Toast.makeText(getParent(), "NEED UPDATE", Toast.LENGTH_LONG).show();
+            }
+
+        }
+    };
+
+
+
+
+
 }
