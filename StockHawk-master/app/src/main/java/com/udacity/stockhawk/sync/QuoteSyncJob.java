@@ -14,6 +14,7 @@ import android.support.annotation.IntDef;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.github.mikephil.charting.data.Entry;
 import com.udacity.stockhawk.R;
 import com.udacity.stockhawk.data.Contract;
 import com.udacity.stockhawk.data.PrefUtils;
@@ -27,6 +28,7 @@ import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+
 import java.util.Map;
 import java.util.Set;
 
@@ -105,8 +107,8 @@ public final class QuoteSyncJob {
 
 
                 Stock stock = quotes.get(symbol);
-                Log.i(LOG_TAG, stock + "what");
-                Log.i(LOG_TAG, "stock nmae is" + !stock.isValid());
+
+
 
 
 
@@ -123,15 +125,38 @@ public final class QuoteSyncJob {
 
                 // WARNING! Don't request historical data for a stock that doesn't exist!
                 // The request will hang forever X_x
-                List<HistoricalQuote> history = stock.getHistory(from, to, Interval.WEEKLY);
+                List<HistoricalQuote> history = stock.getHistory(from, to, Interval.DAILY);
+
+
+//                List<Entry> entries = new ArrayList<Entry>();
+//                for(HistoricalQuote historicalData : history){
+//                   entries.add(new Entry(historicalData.getDate().getTimeInMillis(),historicalData.getClose().floatValue()));
+//
+//                }
+
+
 
                 StringBuilder historyBuilder = new StringBuilder();
 
                 for (HistoricalQuote it : history) {
                     historyBuilder.append(it.getDate().getTimeInMillis());
+                    //Log.i("H1","" + historyBuilder.append(it.getDate().getTimeInMillis()));
                     historyBuilder.append(", ");
+                    //Log.i("H2" ,"" + historyBuilder.append(", "));
                     historyBuilder.append(it.getClose());
+                   // Log.i("H3" , "" + historyBuilder.append(it.getClose()));
                     historyBuilder.append("\n");
+                   // Log.i("H4" , "" + historyBuilder.append("\n"));
+
+                    Log.i("CHART", "" + it.getSymbol());
+
+                                        Log.i("CHART", "" + it.toString());
+                    Log.i("CHART", "" + it.getAdjClose());
+                    Log.i("CHART", "" + it.getDate().getTime());
+                    Log.i("CHART", "" + it.getHigh());
+                    Log.i("CHART", "" + it.getLow());
+                    Log.i("CHART", "" + it.getOpen());
+                    Log.i("CHART", "" + it.getVolume());
                 }
 
                 ContentValues quoteCV = new ContentValues();

@@ -41,5 +41,8 @@
 
     <string name="toast_stock_update_failed_for_website">The Price not refresh, The server is not returning data!</string>
 
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
 
 </resources>

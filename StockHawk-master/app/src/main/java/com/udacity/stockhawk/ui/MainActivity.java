@@ -26,10 +26,14 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.mikephil.charting.data.Entry;
 import com.udacity.stockhawk.R;
 import com.udacity.stockhawk.data.Contract;
 import com.udacity.stockhawk.data.PrefUtils;
 import com.udacity.stockhawk.sync.QuoteSyncJob;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -43,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     private static final int STOCK_LOADER = 0;
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
+    public static final String EXTRA_SYMBOL = "extra_symbol";
     @SuppressWarnings("WeakerAccess")
     @BindView(R.id.recycler_view)
     RecyclerView stockRecyclerView;
@@ -56,6 +61,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     @Override
     public void onClick(String symbol) {
+        Intent intent = new Intent(this, ChartActivity.class);
+        intent.putExtra(EXTRA_SYMBOL,symbol);
+        startActivity(intent);
+        Log.i("CLICKED","CLICKED");
         Timber.d("Symbol clicked: %s", symbol);
     }
 
@@ -95,6 +104,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
 
 
+
+
         new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
             @Override
             public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
@@ -108,6 +119,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 getContentResolver().delete(Contract.Quote.makeUriForStock(symbol), null, null);
             }
         }).attachToRecyclerView(stockRecyclerView);
+
+
 
 
     }
@@ -183,12 +196,17 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+
+
         swipeRefreshLayout.setRefreshing(false);
 
         if (data.getCount() != 0) {
             error.setVisibility(View.GONE);
         }
         adapter.setCursor(data);
+
+
+
     }
 
 

@@ -23,6 +23,11 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".ui.ChartActivity"
+            android:parentActivityName=".ui.MainActivity">
+
+        </activity>
+
         <service
             android:name=".sync.QuoteIntentService"
             android:exported="false" />
