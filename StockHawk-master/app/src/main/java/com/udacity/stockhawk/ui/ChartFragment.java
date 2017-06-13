@@ -50,7 +50,9 @@ import yahoofinance.YahooFinance;
  * Created by lk235 on 2017/6/6.
  */
 
-public class ChartFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class ChartFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
+
+
 
 
     private final int CHART_LOADER = 0;
@@ -67,7 +69,8 @@ public class ChartFragment extends Fragment implements LoaderManager.LoaderCallb
     public static final int COL_HISTORY = 1;
     private LineChart mChart;
     private String mSymbol;
-    private Highlight mHighlight;
+
+
 
 
     public ChartFragment(){
@@ -81,61 +84,6 @@ public class ChartFragment extends Fragment implements LoaderManager.LoaderCallb
         View rootView = inflater.inflate(R.layout.fragment_chart, container, false);
 
          mChart= (LineChart) rootView.findViewById(R.id.chart);
-         mChart.setTouchEnabled(true);
-         mChart.setOnChartGestureListener(new OnChartGestureListener() {
-             @Override
-             public void onChartGestureStart(MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
-
-             }
-
-             @Override
-             public void onChartGestureEnd(MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
-
-             }
-
-             @Override
-             public void onChartLongPressed(MotionEvent me) {
-
-             }
-
-             @Override
-             public void onChartDoubleTapped(MotionEvent me) {
-
-             }
-
-             @Override
-             public void onChartSingleTapped(MotionEvent me) {
-                 float tappedX = me.getX();
-                 float tappedY = me.getY();
-                 MPPointD point = mChart.getTransformer(YAxis.AxisDependency.LEFT).getValuesByTouchPoint(tappedX, tappedY);
-                 double xValue = point.x;
-                 double yValue = point.y;
-                 mHighlight = mChart.getHighlightByTouchPoint((float)xValue, (float)yValue);
-                 mHighlight.setDraw((float)xValue, (float)yValue);
-
-
-             }
-
-             @Override
-             public void onChartFling(MotionEvent me1, MotionEvent me2, float velocityX, float velocityY) {
-
-             }
-
-             @Override
-             public void onChartScale(MotionEvent me, float scaleX, float scaleY) {
-
-             }
-
-             @Override
-             public void onChartTranslate(MotionEvent me, float dX, float dY) {
-
-             }
-         });
-
-
-
-
-
 
 
 
@@ -206,9 +154,11 @@ public class ChartFragment extends Fragment implements LoaderManager.LoaderCallb
 
         LineData lineData = new LineData(dataSet);
 
-        mChart.setData(lineData);
 
+        mChart.setData(lineData);
         mChart.invalidate(); // refresh
+
+
 
         XAxis xAxis = mChart.getXAxis();
         xAxis.setTextColor(Color.WHITE);
@@ -231,6 +181,13 @@ public class ChartFragment extends Fragment implements LoaderManager.LoaderCallb
         leftAxis.setTextColor(Color.WHITE);
         rightAxis.setTextColor(Color.WHITE);
 
+       // mChart.setDrawMarkerViews(true);
+        CustomMarkerView mv = new CustomMarkerView(getActivity(), R.layout.marker_view);
+
+// set the marker to the chart
+        mChart.setMarkerView(mv);
+        //mChart.setTouchEnabled(true);
+
 
 
 
@@ -241,22 +198,6 @@ public class ChartFragment extends Fragment implements LoaderManager.LoaderCallb
     public void onLoaderReset(Loader<Cursor> loader) {
 
     }
-
-//    public class StockMarkerView extends MarkerView {
-//
-//        private TextView chartValue;
-//        public StockMarkerView (Context context, int layoutResource) {
-//            super(context, layoutResource);
-//            // this markerview only displays a textview
-//            chartValue = (TextView) findViewById(R.id.value_chart_text_view);
-//        }
-//
-//        // callbacks everytime the MarkerView is redrawn, can be used to update the
-//        // content (user-interface)
-//        @Override
-//        public void refreshContent(Entry e, Highlight highlight) {
-//            chartValue.setText(e.getX() + "\n" + e.getY()); // set the entry-value as the display text
-//        }
 
 
 
