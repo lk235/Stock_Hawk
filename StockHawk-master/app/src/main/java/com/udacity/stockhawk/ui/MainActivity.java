@@ -34,6 +34,7 @@ import com.udacity.stockhawk.sync.QuoteSyncJob;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -48,6 +49,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     private static final int STOCK_LOADER = 0;
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
     public static final String EXTRA_SYMBOL = "extra_symbol";
+
     @SuppressWarnings("WeakerAccess")
     @BindView(R.id.recycler_view)
     RecyclerView stockRecyclerView;
@@ -222,7 +224,12 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 .equals(getString(R.string.pref_display_mode_absolute_key))) {
             item.setIcon(R.drawable.ic_percentage);
         } else {
+
+            if(Locale.getDefault().getLanguage().equals("zh")){
+                item.setIcon(R.drawable.rmb);
+            }else
             item.setIcon(R.drawable.ic_dollar);
+
         }
     }
 

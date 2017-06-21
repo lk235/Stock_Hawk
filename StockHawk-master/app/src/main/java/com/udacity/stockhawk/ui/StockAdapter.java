@@ -26,9 +26,12 @@ class StockAdapter extends RecyclerView.Adapter<StockAdapter.StockViewHolder> {
     private final Context context;
     private final DecimalFormat dollarFormatWithPlus;
     private final DecimalFormat dollarFormat;
+    private final DecimalFormat rmbFormatWithPlus;
+    private final DecimalFormat rmbFormat;
     private final DecimalFormat percentageFormat;
     private Cursor cursor;
     private final StockAdapterOnClickHandler clickHandler;
+    public static final double EXCHANGE_RATE = 6.8725;
 
     StockAdapter(Context context, StockAdapterOnClickHandler clickHandler) {
         this.context = context;
@@ -37,6 +40,9 @@ class StockAdapter extends RecyclerView.Adapter<StockAdapter.StockViewHolder> {
         dollarFormat = (DecimalFormat) NumberFormat.getCurrencyInstance(Locale.US);
         dollarFormatWithPlus = (DecimalFormat) NumberFormat.getCurrencyInstance(Locale.US);
         dollarFormatWithPlus.setPositivePrefix("+$");
+        rmbFormat = (DecimalFormat) NumberFormat.getCurrencyInstance(Locale.CHINA);
+        rmbFormatWithPlus = (DecimalFormat) NumberFormat.getCurrencyInstance(Locale.CHINA);
+        rmbFormatWithPlus.setPositivePrefix("+￥");
         percentageFormat = (DecimalFormat) NumberFormat.getPercentInstance(Locale.getDefault());
         percentageFormat.setMaximumFractionDigits(2);
         percentageFormat.setMinimumFractionDigits(2);
@@ -69,12 +75,30 @@ class StockAdapter extends RecyclerView.Adapter<StockAdapter.StockViewHolder> {
 
 
         holder.symbol.setText(cursor.getString(Contract.Quote.POSITION_SYMBOL));
-        holder.price.setText(dollarFormat.format(cursor.getFloat(Contract.Quote.POSITION_PRICE)));
+        holder.symbol.setContentDescription(context.getString(R.string.a11y_stock_symbol,
+                cursor.getString(Contract.Quote.POSITION_SYMBOL)));
+        if(Locale.getDefault().getLanguage().equals("zh")){
+            float price_us = cursor.getFloat(Contract.Quote.POSITION_PRICE);
+            float price_ch = (float)(price_us * EXCHANGE_RATE);
+            holder.price.setText(rmbFormat.format(price_ch));
+        }else {
+            holder.price.setText(dollarFormat.format(cursor.getFloat(Contract.Quote.POSITION_PRICE)));
+        }
+
+        holder.price.setContentDescription(context.getString(R.string.a11y_stock_price,
+                dollarFormat.format(cursor.getFloat(Contract.Quote.POSITION_PRICE))));
         Log.i("HISTORY1: ", cursor.getString(Contract.Quote.POSITION_HISTORY));
 
+        float rawAbsoluteChange;
+        String change;
+        if(Locale.getDefault().getLanguage().equals("zh")){
+             rawAbsoluteChange= (float)(cursor.getFloat(Contract.Quote.POSITION_ABSOLUTE_CHANGE) * EXCHANGE_RATE);
+            change = rmbFormatWithPlus.format(rawAbsoluteChange);
+        }else{
+             rawAbsoluteChange = cursor.getFloat(Contract.Quote.POSITION_ABSOLUTE_CHANGE);
+             change= dollarFormatWithPlus.format(rawAbsoluteChange);
+        }
 
-
-        float rawAbsoluteChange = cursor.getFloat(Contract.Quote.POSITION_ABSOLUTE_CHANGE);
         float percentageChange = cursor.getFloat(Contract.Quote.POSITION_PERCENTAGE_CHANGE);
 
         if (rawAbsoluteChange > 0) {
@@ -83,14 +107,17 @@ class StockAdapter extends RecyclerView.Adapter<StockAdapter.StockViewHolder> {
             holder.change.setBackgroundResource(R.drawable.percent_change_pill_red);
         }
 
-        String change = dollarFormatWithPlus.format(rawAbsoluteChange);
+
+
         String percentage = percentageFormat.format(percentageChange / 100);
 
         if (PrefUtils.getDisplayMode(context)
                 .equals(context.getString(R.string.pref_display_mode_absolute_key))) {
             holder.change.setText(change);
+            holder.change.setContentDescription(context.getString(R.string.a11y_stock_change, change));
         } else {
             holder.change.setText(percentage);
+            holder.change.setContentDescription(context.getString(R.string.a11y_stock_change, percentage));
         }
 
 

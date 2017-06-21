@@ -42,7 +42,7 @@ import yahoofinance.quotes.stock.StockQuote;
 public final class QuoteSyncJob {
 
     private static final int ONE_OFF_ID = 2;
-    public static final String ACTION_DATA_UPDATED = "com.udacity.stockhawk.ACTION_DATA_UPDATED";
+
     public static final String DATA_UPDATE_STATUS = "data_update_status";
     public static final String DATA_UPDATE_SUCESSFUL = "data_update_sucessful";
     public static final String DATA_UPDATE_FAILED = "data_update_failed";
@@ -63,6 +63,8 @@ public final class QuoteSyncJob {
     public static final int STOCK_STATUS_OK = 0;
     public static final int STOCK_STATUS_UNKNOWN = 1;
     public static final int STOCK_STATUS_INVALID = 2;
+    public static final String ACTION_DATA_UPDATED =
+            "com.udacity.stockhawk.app.ACTION_DATA_UPDATED";
 
     private QuoteSyncJob() {
     }
