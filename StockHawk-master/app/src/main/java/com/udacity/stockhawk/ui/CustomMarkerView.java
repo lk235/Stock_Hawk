@@ -7,6 +7,7 @@ import android.widget.TextView;
 import com.github.mikephil.charting.components.MarkerView;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.highlight.Highlight;
+import com.github.mikephil.charting.utils.MPPointF;
 import com.udacity.stockhawk.R;
 
 import java.text.SimpleDateFormat;
@@ -56,4 +57,9 @@ public class CustomMarkerView extends MarkerView {
 //        // this will cause the marker-view to be above the selected value
 //        return -getHeight();
 //    }
+
+    @Override
+    public MPPointF getOffset() {
+        return new MPPointF(-this.getWidth() / 2, -this.getHeight());
+    }
 }

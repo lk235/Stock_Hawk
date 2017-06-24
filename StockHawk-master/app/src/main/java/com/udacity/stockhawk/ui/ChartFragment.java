@@ -185,7 +185,8 @@ public class ChartFragment extends Fragment implements LoaderManager.LoaderCallb
         CustomMarkerView mv = new CustomMarkerView(getActivity(), R.layout.marker_view);
 
 // set the marker to the chart
-        mChart.setMarkerView(mv);
+        //mChart.setMarkerView(mv);
+        mChart.setMarker(mv);
         //mChart.setTouchEnabled(true);
 
 
